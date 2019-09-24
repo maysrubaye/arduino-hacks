@@ -1,0 +1,65 @@
+//This script shows using the Parola library to display messages on a series of 8x8 matrices
+
+#include <Wire.h>
+#include <DS3231.h>
+#include <MD_Parola.h>
+#include <SPI.h>
+
+// Define the number of devices we have in the chain and the hardware interface
+#define MAX_DEVICES 5 //8x8 dot matrices. 5 of them for the clock display
+#define CLK_PIN   13  //matrices clk pin
+#define DATA_PIN  11  //matrices din pin
+#define CS_PIN    10  //matrices cs pin
+#define  SIZE  10     //char[] size for the date message
+
+// Hardware SPI connection
+MD_Parola p = MD_Parola(CS_PIN, MAX_DEVICES);
+
+DS3231 clock;
+RTCDateTime dt;
+
+char message[SIZE]; //message that displays time
+
+void setup() {
+  
+  //clock setup
+  clock.begin();
+  //clock.setDateTime(__DATE__, __TIME__);
+  p.begin();
+  p.setIntensity(7);
+}
+
+void loop() {
+  
+  //clock settings and display
+  dt = clock.getDateTime();
+  int hour = dt.hour;
+  int minute = dt.minute;
+  int seconds = dt.second;
+
+  if(hour >= 13)
+  {
+    hour = hour - 12;
+  }
+  
+  int lh = ((hour/10)%10);//left hand side digit of hour
+  int rh = hour%10;       //right hand side digit of hour
+
+  int lm = (minute/10)%10;//left hand side of min
+  int rm = minute%10;     //right hand side of min
+
+  int ls = ((seconds/10)%10);//left hand side of sec
+  int rs = seconds%10;      //right hand side of sec
+
+//write the time digits in a char[] message to be printed
+  message[0] = char(lh)+48;
+  message[1] = char(rh)+48;
+  message[2] = ':';
+  message[3] = char(lm)+48;
+  message[4] = char(rm)+48;
+  message[5] = ':';
+  message[6] = char(ls)+48;
+  message[7] = char(rs)+48;
+
+  p.print(message);
+}
